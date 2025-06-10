@@ -4,6 +4,7 @@ import (
 	"attendance-service/controllers"
 	"attendance-service/database"
 	"attendance-service/middlewares"
+	"attendance-service/seed"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -51,6 +52,8 @@ func TestMain(m *testing.M) {
 	// Init database
 	database.Init()
 
+	seed.SeedAttendancePeriod()
+
 	code := m.Run()
 
 	// Bersihkan test DB
@@ -60,7 +63,7 @@ func TestMain(m *testing.M) {
 }
 
 func cleanupTestData() {
-	database.DB.Exec("DELETE FROM attendance_periods WHERE payroll_period_id = ?", 9999)
+	database.DB.Exec("DELETE FROM attendance_periods WHERE payroll_period_code = ?", "3025_JUNE")
 	database.DB.Exec("DELETE FROM attendances WHERE date BETWEEN ? AND ?", time.Now().Add(time.Duration(-1)*time.Minute), time.Now().Add(time.Duration(1)*time.Minute))
 }
 
@@ -73,9 +76,9 @@ func TestAdminCreateAttendancePeriod_Success(t *testing.T) {
 	r := setupRouter()
 
 	body := map[string]any{
-		"startDate":       "2025-06-01",
-		"endDate":         "2025-06-30",
-		"payrollPeriodId": 9999,
+		"startDate":         "3025-06-01",
+		"endDate":           "3025-06-30",
+		"payrollPeriodCode": "3025_JUNE",
 	}
 	payload, _ := json.Marshal(body)
 

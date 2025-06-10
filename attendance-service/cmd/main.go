@@ -4,6 +4,7 @@ import (
 	"attendance-service/config"
 	"attendance-service/database"
 	"attendance-service/routes"
+	"attendance-service/seed"
 
 	"github.com/gin-gonic/gin"
 
@@ -33,6 +34,8 @@ func main() {
 	config.ConnectRedis()
 
 	routes.RegisterRoutes(r)
+
+	seed.SeedAttendancePeriod()
 
 	// use ginSwagger middleware to serve the API docs
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

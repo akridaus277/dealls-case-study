@@ -1,0 +1,30 @@
+# .gitignore
+
+# Ignore Go build artifacts (umum untuk semua service)
+*.exe
+*.out
+*.test
+*.a
+
+# Ignore dependency/vendor folders (jika tidak di-commit)
+vendor/
+
+# Ignore editor/IDE config files
+.vscode/
+.idea/
+*.swp
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore log files
+*.log
+
+# Ignore environment files
+.env
+.env.*
+
+# Ignore build or tmp folders
+/build/
+tmp/
