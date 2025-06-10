@@ -25,7 +25,7 @@ func SeedAttendancePeriod() {
 		Count(&countCodeNow)
 	if countCodeNow == 0 {
 		firstOfMonth := time.Date(time.Now().Year(), time.Now().Month(), 1, 0, 0, 0, 0, time.Now().Location())
-		lastOfMonth := firstOfMonth.AddDate(0, 1, -1)
+		lastOfMonth := time.Date(firstOfMonth.AddDate(0, 1, -1).Year(), firstOfMonth.AddDate(0, 1, -1).Month(), firstOfMonth.AddDate(0, 1, -1).Day(), 23, 59, 59, 0, time.Now().Location())
 		atdPeriodNow := models.AttendancePeriod{
 			PayrollPeriodCode: codeNow,
 			StartDate:         firstOfMonth,
@@ -44,7 +44,7 @@ func SeedAttendancePeriod() {
 		Count(&countCodePrev)
 	if countCodePrev == 0 {
 		firstOfMonth := time.Date(time.Now().Year(), time.Now().AddDate(0, -1, 0).Month(), 1, 0, 0, 0, 0, time.Now().Location())
-		lastOfMonth := firstOfMonth.AddDate(0, 1, -1)
+		lastOfMonth := time.Date(firstOfMonth.AddDate(0, 1, -1).Year(), firstOfMonth.AddDate(0, 1, -1).Month(), firstOfMonth.AddDate(0, 1, -1).Day(), 23, 59, 59, 0, time.Now().Location())
 		atdPeriodPrev := models.AttendancePeriod{
 			PayrollPeriodCode: codePrev,
 			StartDate:         firstOfMonth,
@@ -63,7 +63,7 @@ func SeedAttendancePeriod() {
 		Count(&countCodeNext)
 	if countCodeNext == 0 {
 		firstOfMonth := time.Date(time.Now().Year(), time.Now().AddDate(0, 1, 0).Month(), 1, 0, 0, 0, 0, time.Now().Location())
-		lastOfMonth := firstOfMonth.AddDate(0, 1, -1)
+		lastOfMonth := time.Date(firstOfMonth.AddDate(0, 1, -1).Year(), firstOfMonth.AddDate(0, 1, -1).Month(), firstOfMonth.AddDate(0, 1, -1).Day(), 23, 59, 59, 0, time.Now().Location())
 		atdPeriodNext := models.AttendancePeriod{
 			PayrollPeriodCode: codeNext,
 			StartDate:         firstOfMonth,

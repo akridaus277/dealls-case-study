@@ -12,8 +12,8 @@ func AddAttendancePeriod(startDate, endDate string, payrollCode string, createdB
 	end, _ := time.Parse("2006-01-02", endDate)
 
 	period := &models.AttendancePeriod{
-		StartDate:         start,
-		EndDate:           end,
+		StartDate:         time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0, time.Now().Location()),
+		EndDate:           time.Date(end.Year(), end.Month(), end.Day(), 23, 59, 59, 59, time.Now().Location()),
 		PayrollPeriodCode: payrollCode,
 		Auditable:         utils.NewAuditableCreate(createdBy),
 	}
