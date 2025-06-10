@@ -1,6 +1,7 @@
 package main
 
 import (
+	"api-gateway-service/middlewares"
 	"api-gateway-service/routes"
 	"log"
 	"os"
@@ -16,6 +17,7 @@ func main() {
 	}
 
 	r := gin.Default()
+	r.Use(middlewares.RequestIDMiddleware())
 
 	routes.SetupRoutes(r)
 

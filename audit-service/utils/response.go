@@ -13,35 +13,60 @@ type Response struct {
 	Data    interface{} `json:"data"`
 }
 
-func SendResponse(c *gin.Context, status string, code int, message string, data interface{}) {
-	c.JSON(code, Response{
-		Status:  status,
-		Code:    code,
+func NewBadRequestResponse(message string) Response {
+	return Response{
+		Status:  http.StatusText(http.StatusBadRequest),
+		Code:    http.StatusBadRequest,
+		Message: message,
+		Data:    nil,
+	}
+}
+
+func NewInternalServerErrorResponse(message string) Response {
+	return Response{
+		Status:  http.StatusText(http.StatusInternalServerError),
+		Code:    http.StatusInternalServerError,
+		Message: message,
+		Data:    nil,
+	}
+}
+
+func NewNotFoundResponse(message string) Response {
+	return Response{
+		Status:  http.StatusText(http.StatusNotFound),
+		Code:    http.StatusNotFound,
+		Message: message,
+		Data:    nil,
+	}
+}
+
+func NewUnauthorizedResponse(message string) Response {
+	return Response{
+		Status:  http.StatusText(http.StatusUnauthorized),
+		Code:    http.StatusUnauthorized,
+		Message: message,
+		Data:    nil,
+	}
+}
+
+func NewForbiddenResponse(message string) Response {
+	return Response{
+		Status:  http.StatusText(http.StatusForbidden),
+		Code:    http.StatusForbidden,
+		Message: message,
+		Data:    nil,
+	}
+}
+
+func NewSuccessResponse(message string, data interface{}) Response {
+	return Response{
+		Status:  http.StatusText(http.StatusOK),
+		Code:    http.StatusOK,
 		Message: message,
 		Data:    data,
-	})
+	}
 }
 
-func SendSuccess(c *gin.Context, message string, data interface{}) {
-	SendResponse(c, http.StatusText(http.StatusOK), http.StatusOK, message, data)
-}
-
-func SendInternalServerError(c *gin.Context, message string, data interface{}) {
-	SendResponse(c, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError, message, data)
-}
-
-func SendNotFoundError(c *gin.Context, message string, data interface{}) {
-	SendResponse(c, http.StatusText(http.StatusNotFound), http.StatusNotFound, message, data)
-}
-
-func SendBadRequestError(c *gin.Context, message string, data interface{}) {
-	SendResponse(c, http.StatusText(http.StatusBadRequest), http.StatusBadRequest, message, data)
-}
-
-func SendUnauthorizedError(c *gin.Context, message string, data interface{}) {
-	SendResponse(c, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized, message, data)
-}
-
-func SendForbiddenError(c *gin.Context, message string, data interface{}) {
-	SendResponse(c, http.StatusText(http.StatusForbidden), http.StatusForbidden, message, data)
+func SendResponse(c *gin.Context, response Response) {
+	c.JSON(response.Code, response)
 }

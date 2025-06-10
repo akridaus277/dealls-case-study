@@ -1,7 +1,8 @@
 package middlewares
 
 import (
-	"net/http"
+	"audit-service/utils"
+	"log"
 	"os"
 	"strings"
 
@@ -13,9 +14,10 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Missing or invalid token"})
+			utils.SendResponse(c, utils.NewBadRequestResponse("Missing or invalid token"))
 			return
 		}
+		log.Printf("authheader : %s", authHeader)
 
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
@@ -23,18 +25,17 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		})
 
 		if err != nil || !token.Valid {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			utils.SendResponse(c, utils.NewBadRequestResponse("Invalid token"))
 			return
 		}
 
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid claims"})
+			utils.SendResponse(c, utils.NewBadRequestResponse("Invalid claims"))
 			return
 		}
 
-		c.Set("user_id", claims["user_id"])
-		c.Set("username", claims["username"])
+		c.Set("user", claims["user"])
 		c.Set("role", claims["role"])
 		c.Next()
 	}

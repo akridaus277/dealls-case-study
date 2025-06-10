@@ -35,7 +35,7 @@ func (pc *PayrollController) RunPayroll(c *gin.Context) {
 		return
 	}
 
-	utils.SendResponse(c, pc.PayrollService.RunPayroll(input.PayrollCode))
+	utils.SendResponse(c, pc.PayrollService.RunPayroll(c, input.PayrollCode))
 
 }
 

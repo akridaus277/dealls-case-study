@@ -4,9 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
+	requestDto "payroll-service/dto/request"
 	"payroll-service/internal/feignclient"
+	"payroll-service/kafka"
 	"payroll-service/models"
 	"payroll-service/repositories"
 	"payroll-service/utils"
@@ -43,7 +46,7 @@ func NewPayrollService(employeeClient feignclient.IEmployeeClient, attendanceCli
 	}
 }
 
-func (s *PayrollService) RunPayroll(payrollCode string) utils.Response {
+func (s *PayrollService) RunPayroll(c *gin.Context, payrollCode string) utils.Response {
 	// Cek apakah payroll sudah pernah diproses
 	payroll, err := repositories.GetPayrollByCode(payrollCode)
 	if err != nil {
@@ -59,7 +62,6 @@ func (s *PayrollService) RunPayroll(payrollCode string) utils.Response {
 	if err != nil {
 		return utils.NewInternalServerErrorResponse("Failed to get attendance period for this payroll")
 	}
-	fmt.Printf("atdPeriod : %v", atdPeriod)
 	periodStart := atdPeriod.StartDate
 	periodEnd := atdPeriod.EndDate
 
@@ -67,31 +69,26 @@ func (s *PayrollService) RunPayroll(payrollCode string) utils.Response {
 	if err != nil {
 		return utils.NewInternalServerErrorResponse("Failed to get employees")
 	}
-	fmt.Printf("emps : %v", emps)
 
 	atdSum, err := s.GetAttendanceSummary(periodStart, periodEnd)
 	if err != nil {
 		return utils.NewInternalServerErrorResponse("Failed to get attendance summary")
 	}
-	fmt.Printf("atdSum : %v", atdSum)
 
 	ovtSum, err := s.GetOvertimeSummary(periodStart, periodEnd)
 	if err != nil {
 		return utils.NewInternalServerErrorResponse("Failed to get overtime summary")
 	}
-	fmt.Printf("ovtSum : %v", ovtSum)
 
 	rmbSum, err := s.GetReimbursementSummary(periodStart, periodEnd)
 	if err != nil {
 		return utils.NewInternalServerErrorResponse("Failed to get reimbursement summary")
 	}
-	fmt.Printf("rmbSum : %v", rmbSum)
 
-	mergedEmployees, err := s.generatePayrollPayslip(payroll.ID, periodStart, periodEnd, *emps, *atdSum, *ovtSum, *rmbSum)
+	mergedEmployees, err := s.generatePayrollPayslip(c, payroll.ID, periodStart, periodEnd, *emps, *atdSum, *ovtSum, *rmbSum)
 	if err != nil {
 		return utils.NewInternalServerErrorResponse("Failed to save payslip")
 	}
-	fmt.Printf("mergedEmployees : %v", mergedEmployees)
 
 	return utils.NewSuccessResponse("Payroll ran successfully", mergedEmployees)
 }
@@ -142,7 +139,7 @@ func (s *PayrollService) GetReimbursementSummary(periodStart, periodEnd time.Tim
 }
 
 // Gabungkan dua array di memory
-func (s *PayrollService) generatePayrollPayslip(payrollId uint, periodStart time.Time, periodEnd time.Time, employees []feignclient.EmployeeResponse, attendancesSummary []feignclient.AttendanceSummaryResponse, overtimeSummary []feignclient.OvertimeSummaryResponse, reimbursementSummary []feignclient.ReimbursementSummaryResponse) ([]MergedEmployee, error) {
+func (s *PayrollService) generatePayrollPayslip(c *gin.Context, payrollId uint, periodStart time.Time, periodEnd time.Time, employees []feignclient.EmployeeResponse, attendancesSummary []feignclient.AttendanceSummaryResponse, overtimeSummary []feignclient.OvertimeSummaryResponse, reimbursementSummary []feignclient.ReimbursementSummaryResponse) ([]MergedEmployee, error) {
 
 	// Buat map untuk mempercepat lookup attendance berdasarkan NIP
 	attendanceMap := make(map[string][]feignclient.AttendanceDetail)
@@ -209,8 +206,38 @@ func (s *PayrollService) generatePayrollPayslip(payrollId uint, periodStart time
 			DataJSON:       updatedDataJSONString,
 		}
 		repositories.SavePayslip(payslip)
+
+		msgBytes, err := json.Marshal(payslip)
+		if err != nil {
+			return nil, nil
+		}
+		go s.PubishLogEvent(c, string(msgBytes), "run-payroll", "payroll-service")
 	}
 	return result, nil
+}
+
+func (s *PayrollService) PubishLogEvent(c *gin.Context, metadata string, action string, serviceName string) {
+	//publish event
+	requestID := c.GetHeader("X-Request-ID")
+	ipAddress := c.ClientIP()
+
+	username, _ := c.Get("user")
+	logEntry := requestDto.AuditLog{
+		RequestID: requestID,
+		IPAddress: ipAddress,
+		Action:    action,
+		Metadata:  metadata,
+		Service:   serviceName,
+		Username:  fmt.Sprintf("%v", username),
+	}
+
+	msgBytes, err := json.Marshal(logEntry)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	kafka.PublishAuditEvent(c, nil, msgBytes)
+
 }
 
 func (s *PayrollService) CountWeekdays(start, end time.Time) int {

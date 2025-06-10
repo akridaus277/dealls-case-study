@@ -9,6 +9,7 @@ Sistem ini terdiri dari beberapa layanan microservice yang menangani berbagai fu
 1. [Software Architecture](#software-architecture)
 2. [Running Services](#running-services)
 3. [API Usage](#api-usage)
+4. [Limitation](#limitation)
 
 ---
 
@@ -219,3 +220,12 @@ POST /api/payroll/admin/payslip/report-excel
 ```
 Admin akan menerima report payslip semua employee berupa file Excel dari response API tersebut.
 
+---
+
+## 🏗️ Limitation
+
+### 🔧 Audit Service Limitation
+
+Saat ini audit service hanya menerima event dari kafka yang di hasilkan oleh `payroll-service`
+
+---

@@ -1,31 +1,31 @@
 package controllers
 
 import (
-	"audit-service/internal/messagebroker"
 	"audit-service/kafka"
+	"audit-service/models"
+	"audit-service/utils"
 	"encoding/json"
+	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
-type AuditController struct {
-	Publisher *messagebroker.KafkaPublisher
-}
-
 type AuditEvent struct {
-	Event     string `json:"event"`
-	Service   string `json:"service"`
-	RequestID string `json:"request_id"`
-	IP        string `json:"ip"`
-	Timestamp string `json:"timestamp"`
+	Action   string `json:"action"`
+	Metadata string `json:"metadata"`
+	Service  string `json:"service"`
 }
 
 func PublishAuditEvent(c *gin.Context) {
-	// Ambil userID dari header (dummy sementara)
-	userIDStr := c.Request.Header.Get("X-User-ID")
-	userID, _ := strconv.Atoi(userIDStr)
+	requestID := c.GetHeader("X-Request-ID")
+	ipAddress := c.ClientIP()
+
+	username, exists := c.Get("user")
+	if !exists {
+		utils.SendResponse(c, utils.NewUnauthorizedResponse("Unauthorized"))
+		return
+	}
 
 	var payload AuditEvent
 	if err := c.ShouldBindJSON(&payload); err != nil {
@@ -33,16 +33,22 @@ func PublishAuditEvent(c *gin.Context) {
 		return
 	}
 
-	// Inject userID ke log kalau mau (opsional)
-	payload.Service += " [user_id:" + strconv.Itoa(userID) + "]"
+	// Buat log lengkap
+	logEntry := models.AuditLog{
+		RequestID: requestID,
+		IPAddress: ipAddress,
+		Action:    payload.Action,
+		Metadata:  payload.Metadata,
+		Service:   payload.Service,
+		Username:  fmt.Sprintf("%v", username),
+	}
 
-	msgBytes, err := json.Marshal(payload)
+	msgBytes, err := json.Marshal(logEntry)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "error encoding JSON"})
 		return
 	}
 
 	kafka.PublishAuditEvent(c, nil, msgBytes)
-
 	c.JSON(http.StatusOK, gin.H{"message": "event published to kafka"})
 }

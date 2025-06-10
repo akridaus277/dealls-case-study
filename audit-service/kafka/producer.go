@@ -18,7 +18,8 @@ func PublishAuditEvent(ctx *gin.Context, key []byte, value []byte) {
 
 	err := publisher.PublishMessage(context.Background(), key, value)
 	if err != nil {
-		utils.SendInternalServerError(ctx, "failed to publish to kafka", nil)
+		utils.SendResponse(ctx, utils.NewInternalServerErrorResponse("failed to publish to kafka"))
+
 		return
 	}
 }

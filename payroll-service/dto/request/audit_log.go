@@ -1,7 +1,6 @@
-package models
+package requestDto
 
 type AuditLog struct {
-	Auditable
 	RequestID string `json:"requestId" gorm:"index"`
 	IPAddress string `json:"ipAddress" `
 	Action    string `json:"action" `
