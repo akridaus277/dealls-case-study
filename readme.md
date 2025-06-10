@@ -46,6 +46,10 @@ Gunakan tools seperti psql, DBeaver, atau pgAdmin untuk mengeksekusi SQL yang te
 ### 2.2 🛠️ Running Kafka (Optional)
 
 Run kafka server dengan tutorial [di sini](https://kafka.apache.org/quickstart)
+Setting yang digunakan sebagai berikut :
+KAFKA_BROKERS=localhost:9092
+KAFKA_TOPIC=audit-log
+KAFKA_GROUP_ID=audit-service-test
 
 ### 2.3 🛠️ Running Service 
 
